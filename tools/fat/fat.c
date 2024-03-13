@@ -30,9 +30,28 @@ typedef struct
     uint32_t VolumeId;          // serial number, value doesn't matter
     uint8_t VolumeLabel[11];    // 11 bytes, padded with spaces
     uint8_t SystemId[8];
-} BootSector;
+} __attribute__((packed)) BootSector;
+
+BootSector g_BootSector;
+uint8_t* g_Fat = NULL;
+
 
 bool readBootSector(FILE* disk)
+{
+    return fread(&g_BootSector, sizeof(g_BootSector), 1, disk) > 0;
+}
+
+bool readSectors(FILE* disk, uint32_t lba, uint32_t count, void* bufferOut){
+    bool ok = true;
+    ok = ok && (fseek(disk, lba * g_BootSector.BytesPerSector, SEEK_SET) == 0);
+    ok = ok && (fread(bufferOut, g_BootSector.BytesPerSector, count, disk) == count);
+    return ok;
+}
+
+bool readFat(FILE* disk) {
+    g_Fat = (uint8_t*) malloc(g_BootSector.SectorsPerFat * g_BootSector.BytesPerSector);
+    return readSectors(disk, g_BootSector.ReservedSectors, g_BootSector.SectorsPerFat);
+}
 
 int main(int argc, char** argv)
 {
@@ -42,6 +61,16 @@ int main(int argc, char** argv)
     }
 
     FILE* disk = fopen(argv[1], "rb");
+
+    if (!disk) {
+        fprintf(stderr, "Cannot open disk image %s!", argv[1]);
+        return -1;
+    }
+
+    if (!readBootSector(disk)){
+        fprintf(stderr, "Cannot open boot sector!\n");
+        return -2;
+    }
 
     return 0;
 }
