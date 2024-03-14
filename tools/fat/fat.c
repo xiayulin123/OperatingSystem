@@ -50,7 +50,7 @@ bool readSectors(FILE* disk, uint32_t lba, uint32_t count, void* bufferOut){
 
 bool readFat(FILE* disk) {
     g_Fat = (uint8_t*) malloc(g_BootSector.SectorsPerFat * g_BootSector.BytesPerSector);
-    return readSectors(disk, g_BootSector.ReservedSectors, g_BootSector.SectorsPerFat);
+    return readSectors(disk, g_BootSector.ReservedSectors, g_BootSector.SectorsPerFat, g_Fat);
 }
 
 int main(int argc, char** argv)
