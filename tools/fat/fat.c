@@ -72,5 +72,10 @@ int main(int argc, char** argv)
         return -2;
     }
 
+
+    if (!readFat(disk)){
+        fprintf(stderr, "Cannot read fat!\n");
+        return -3
+    }
     return 0;
 }
